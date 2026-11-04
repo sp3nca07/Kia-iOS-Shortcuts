@@ -78,13 +78,39 @@ def authorize_request():
     return request.headers.get("Authorization") == SECRET_KEY
 
 
+
 def ensure_authenticated():
-    """
-    Attempt to refresh Kia token.
-    Will fail if Kia requires OTP / captcha.
-    """
+    from hyundai_kia_connect_api.Token import Token
+
     try:
+        if vehicle_manager.token is None:
+            saved = load_secure("kia:session")
+
+            if saved:
+                saved["username"] = USERNAME
+                saved["password"] = PASSWORD
+                saved["pin"] = str(PIN)
+
+                vehicle_manager.token = Token.from_dict(saved)
+
+                if vehicle_manager.token.device_id:
+                    vehicle_manager.api.device_id = (
+                        vehicle_manager.token.device_id
+                    )
+
         vehicle_manager.check_and_refresh_token()
+
+        if vehicle_manager.token:
+            token_data = vehicle_manager.token.to_dict()
+            token_data.pop("password", None)
+            token_data.pop("pin", None)
+
+            save_secure(
+                "kia:session",
+                token_data,
+                seconds=604800
+            )
+
     except AuthenticationError as e:
         if type(e).__name__ == "AuthenticationOTPRequired":
             raise AuthenticationError("OTP_REQUIRED") from e
