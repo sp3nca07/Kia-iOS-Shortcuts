@@ -1,9 +1,14 @@
 import os
+from upstash_redis import Redis
 from flask import Flask, request, jsonify
 from hyundai_kia_connect_api import VehicleManager, ClimateRequestOptions
 from hyundai_kia_connect_api.exceptions import AuthenticationError
 
 app = Flask(__name__)
+redis_client = Redis(
+    url=os.environ["KV_REST_API_URL"],
+    token=os.environ["KV_REST_API_TOKEN"],
+)
 
 # =========================
 # Environment Variables
