@@ -214,7 +214,7 @@ def stop_climate():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/unlock_car", methods=["POST"])
+# @app.route("/unlock_car", methods=["POST"])
 def unlock_car():
     if not authorize_request():
         return jsonify({"error": "Unauthorized"}), 403
