@@ -168,14 +168,16 @@ def otp_start():
             return jsonify({"status": "sms_unavailable"}), 400
 
         # Save the temporary verification challenge for 5 minutes.
-        redis_client.set(
+        
+        save_secure(
             "kia:otp_pending",
-            json.dumps({
+            {
                 "challenge": asdict(result),
                 "device_id": vehicle_manager.api.device_id
-            }),
-            ex=300
+            },
+            seconds=300
         )
+
 
         vehicle_manager.send_otp(OTP_NOTIFY_TYPE.SMS)
 
