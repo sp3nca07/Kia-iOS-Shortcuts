@@ -106,6 +106,20 @@ def root():
     }), 200
 
 
+@app.route("/storage_status", methods=["GET"])
+def storage_status():
+    if not authorize_request():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    try:
+        redis_client.set("kia:connection_test", "ok", ex=60)
+        result = redis_client.get("kia:connection_test")
+        return jsonify({
+            "storage": "connected" if result == "ok" else "failed"
+        }), 200
+    except Exception:
+        return jsonify({"storage": "failed"}), 500
+
 @app.route("/auth_status", methods=["GET"])
 def auth_status():
     if not authorize_request():
