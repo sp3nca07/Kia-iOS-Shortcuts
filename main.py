@@ -10,6 +10,34 @@ redis_client = Redis(
     token=os.environ["KV_REST_API_TOKEN"],
 )
 
+import base64
+import hashlib
+import json
+from cryptography.fernet import Fernet
+
+def storage_cipher():
+    secret = os.environ["SECRET_KEY"]
+    key = hashlib.sha256(
+        ("kia-storage-v1:" + secret).encode()
+    ).digest()
+    return Fernet(base64.urlsafe_b64encode(key))
+
+def save_secure(key, data, seconds=300):
+    encrypted = storage_cipher().encrypt(
+        json.dumps(data).encode()
+    ).decode()
+    redis_client.set(key, encrypted, ex=seconds)
+
+def load_secure(key):
+    encrypted = redis_client.get(key)
+    if not encrypted:
+        return None
+    return json.loads(
+        storage_cipher().decrypt(
+            encrypted.encode()
+        ).decode()
+    )
+
 # =========================
 # Environment Variables
 # =========================
