@@ -53,10 +53,9 @@ def ensure_authenticated():
     try:
         vehicle_manager.check_and_refresh_token()
     except AuthenticationError as e:
-        raise AuthenticationError(
-            "Kia authentication failed. "
-            "Open the Kia app and complete 2FA, then retry."
-        ) from e
+        if type(e).__name__ == "AuthenticationOTPRequired":
+            raise AuthenticationError("OTP_REQUIRED") from e
+        raise AuthenticationError("LOGIN_REJECTED") from e
 
 
 def refresh_and_sync():
