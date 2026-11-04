@@ -148,6 +148,52 @@ def storage_status():
     except Exception:
         return jsonify({"storage": "failed"}), 500
 
+@app.route("/otp_verify", methods=["POST"])
+def otp_verify():
+    if not authorize_request():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.get_json(silent=True) or {}
+    code = str(data.get("code", "")).strip()
+
+    if not code or not code.isdigit():
+        return jsonify({"status": "invalid_code"}), 400
+
+    try:
+        from hyundai_kia_connect_api.ApiImpl import OTPRequest
+
+        pending = load_secure("kia:otp_pending")
+        if not pending:
+            return jsonify({"status": "otp_expired"}), 400
+
+        vehicle_manager.otp_request = OTPRequest(
+            **pending["challenge"]
+        )
+        vehicle_manager.api.device_id = pending["device_id"]
+
+        vehicle_manager.verify_otp_and_complete_login(code)
+
+        token_data = vehicle_manager.token.to_dict()
+        token_data.pop("password", None)
+        token_data.pop("pin", None)
+
+        save_secure(
+            "kia:session",
+            token_data,
+            seconds=604800
+        )
+
+        redis_client.delete("kia:otp_pending")
+
+        return jsonify({
+            "status": "verified"
+        }), 200
+
+    except Exception:
+        return jsonify({
+            "status": "verification_failed"
+        }), 401
+
 @app.route("/otp_start", methods=["POST"])
 def otp_start():
     if not authorize_request():
