@@ -155,7 +155,7 @@ def list_vehicles():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/start_climate", methods=["POST"])
+# @app.route("/start_climate", methods=["POST"])
 def start_climate():
     if not authorize_request():
         return jsonify({"error": "Unauthorized"}), 403
@@ -187,7 +187,7 @@ def start_climate():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/stop_climate", methods=["POST"])
+# @app.route("/stop_climate", methods=["POST"])
 def stop_climate():
     if not authorize_request():
         return jsonify({"error": "Unauthorized"}), 403
