@@ -120,6 +120,31 @@ def storage_status():
     except Exception:
         return jsonify({"storage": "failed"}), 500
 
+@app.route("/otp_probe", methods=["GET"])
+def otp_probe():
+    if not authorize_request():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    try:
+        from hyundai_kia_connect_api.ApiImpl import OTPRequest
+
+        result = vehicle_manager.login()
+
+        if isinstance(result, OTPRequest):
+            return jsonify({
+                "status": "otp_challenge",
+                "email_available": bool(result.has_email),
+                "sms_available": bool(result.has_sms)
+            }), 200
+
+        if result is True:
+            return jsonify({"status": "authenticated"}), 200
+
+        return jsonify({"status": "no_challenge"}), 401
+
+    except Exception:
+        return jsonify({"status": "login_error"}), 401
+
 @app.route("/auth_status", methods=["GET"])
 def auth_status():
     if not authorize_request():
